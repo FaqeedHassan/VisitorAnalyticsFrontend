@@ -1,38 +1,47 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import AnalyticsDashboard from './AnalyticsDashboard';
-import { getDeviceInfo, hasBeenTracked, markVisitorTracked  } from './utils';
+import { useEffect, useState } from "react";
+import axios from "axios";
+import AnalyticsDashboard from "./AnalyticsDashboard";
+import { getDeviceInfo, hasBeenTracked, markVisitorTracked } from "./utils";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
 
-useEffect(() => {
-  if (!hasBeenTracked()) {
-    const { device, browser } = getDeviceInfo();
-    axios.post('https://visitoranalyticsbackend-production.up.railway.app/api/track', {
-      browser,
-      device,
-    }).then(() => {
-      markVisitorTracked(); // Mark as tracked after success
-    }).catch((err) => {
-      console.error("Tracking failed:", err);
-    });
-  }
-}, []);
-
+  useEffect(() => {
+    if (!hasBeenTracked()) {
+      const { device, browser } = getDeviceInfo();
+      axios
+        .post(
+          "https://visitoranalyticsbackend-production.up.railway.app/api/track",
+          {
+            browser:
+              browser.charAt(0).toUpperCase() + browser.slice(1).toLowerCase(),
+            device:
+              device.charAt(0).toUpperCase() + device.slice(1).toLowerCase(),
+          }
+        )
+        .then(() => {
+          markVisitorTracked(); // Mark as tracked after success
+        })
+        .catch((err) => {
+          console.error("Tracking failed:", err);
+        });
+    }
+  }, []);
 
   const handleLogin = () => {
-    if (password === 'admin123') {
+    if (password === "admin123") {
       setLoggedIn(true);
     } else {
-      alert('Wrong password!');
+      alert("Wrong password!");
     }
   };
 
   return (
     <div className="bg-gray-900 text-white min-w-screen min-h-screen flex flex-col items-center justify-start p-4 md:p-6 overflow-x-hidden">
-      <h1 className="text-3xl font-bold mb-6 text-center">📈 Website Visitor Analytics</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        📈 Website Visitor Analytics
+      </h1>
 
       {!loggedIn ? (
         <div className="bg-gray-800 p-6 rounded-xl w-full max-w-sm mx-auto space-y-4 shadow-lg">
