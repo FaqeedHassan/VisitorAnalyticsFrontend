@@ -1,19 +1,26 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AnalyticsDashboard from './AnalyticsDashboard';
-import { getDeviceInfo } from './utils';
+import { getDeviceInfo, hasBeenTracked, markVisitorTracked  } from './utils';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
 
-  useEffect(() => {
+useEffect(() => {
+  if (!hasBeenTracked()) {
     const { device, browser } = getDeviceInfo();
     axios.post('https://visitoranalyticsbackend-production.up.railway.app/api/track', {
       browser,
       device,
+    }).then(() => {
+      markVisitorTracked(); // Mark as tracked after success
+    }).catch((err) => {
+      console.error("Tracking failed:", err);
     });
-  }, []);
+  }
+}, []);
+
 
   const handleLogin = () => {
     if (password === 'admin123') {
