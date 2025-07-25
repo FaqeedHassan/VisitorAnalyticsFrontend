@@ -16,11 +16,22 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#14b8a6", "#3b82f6"];
+const COLORS = [
+  "#ff6b6b",
+  "#6bcB77",
+  "#4d96ff",
+  "#fbbf24",
+  "#8e44ad",
+  "#00cec9",
+  "#e84393",
+  "#fd7e14",
+  "#1abc9c",
+  "#ff4757"
+];
 
 function AnalyticsDashboard() {
   const [data, setData] = useState([]);
-  const [activeIndex, setActiveIndex] = useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState({});
   const [loading, setLoading] = useState(false);
 
   const today = new Date();
@@ -71,35 +82,21 @@ function AnalyticsDashboard() {
 
   const normalize = (str) => (str || "Unknown").trim().toLowerCase();
 
-  const browserStats = data.reduce((acc, cur) => {
-    const name = normalize(cur.browser);
-    acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {});
-  const browserChartData = Object.entries(browserStats).map(([name, count]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    count,
-  }));
+  const aggregateData = (key) => {
+    const stats = data.reduce((acc, cur) => {
+      const name = normalize(cur[key]);
+      acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(stats).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+    }));
+  };
 
-  const deviceStats = data.reduce((acc, cur) => {
-    const name = normalize(cur.device);
-    acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {});
-  const deviceChartData = Object.entries(deviceStats).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value,
-  }));
-
-  const countryStats = data.reduce((acc, cur) => {
-    const name = normalize(cur.country);
-    acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {});
-  const countryChartData = Object.entries(countryStats).map(([name, value]) => ({
-    name: name.toUpperCase(),
-    value,
-  }));
+  const browserChartData = aggregateData("browser").map((d) => ({ name: d.name, count: d.value }));
+  const deviceChartData = aggregateData("device");
+  const countryChartData = aggregateData("country").map((d) => ({ name: d.name.toUpperCase(), value: d.value }));
 
   const timeStats = {};
   data.forEach((item) => {
@@ -125,11 +122,14 @@ function AnalyticsDashboard() {
     return null;
   };
 
+  const handleHover = (chart, index) => {
+    setHoveredIndex((prev) => ({ ...prev, [chart]: index }));
+  };
+
   return (
     <div className="p-4 md:p-8 text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-center">📊 Analytics Dashboard</h1>
 
-      {/* Filters */}
       <div className="bg-slate-800 p-6 rounded-2xl shadow-md mb-10 flex flex-col md:flex-row md:items-end gap-6">
         <div className="flex-1">
           <label className="block mb-1 text-gray-300">Start Date</label>
@@ -171,19 +171,18 @@ function AnalyticsDashboard() {
                 <YAxis stroke="#fff" />
                 <Tooltip content={customTooltip} />
                 <Legend />
-                <Bar
-                  dataKey="count"
-                  fill="#6366f1"
-                  radius={[6, 6, 0, 0]}
-                  animationDuration={500}
-                  onMouseOver={(e) => setActiveIndex(e.index)}
-                  onMouseOut={() => setActiveIndex(null)}
-                >
+                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                   {browserChartData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
-                      fill={index === activeIndex ? "#818cf8" : "#6366f1"}
-                      style={{ transition: "all 0.3s ease" }}
+                      key={index}
+                      fill={COLORS[index % COLORS.length]}
+                      style={{
+                        filter: hoveredIndex.browser === index ? "drop-shadow(0 0 6px white)" : "none",
+                        transform: hoveredIndex.browser === index ? "translateY(-4px)" : "translateY(0)",
+                        transition: "all 0.3s ease",
+                      }}
+                      onMouseEnter={() => handleHover("browser", index)}
+                      onMouseLeave={() => handleHover("browser", null)}
                     />
                   ))}
                 </Bar>
@@ -203,16 +202,18 @@ function AnalyticsDashboard() {
                   outerRadius={80}
                   label
                   isAnimationActive
-                  onMouseEnter={(_, i) => setActiveIndex(i)}
-                  onMouseLeave={() => setActiveIndex(null)}
                 >
                   {deviceChartData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={index}
                       fill={COLORS[index % COLORS.length]}
-                      stroke={index === activeIndex ? "#fff" : "none"}
-                      strokeWidth={index === activeIndex ? 2 : 0}
-                      style={{ transition: "all 0.3s ease" }}
+                      style={{
+                        filter: hoveredIndex.device === index ? "drop-shadow(0 0 6px white)" : "none",
+                        transform: hoveredIndex.device === index ? "scale(1.05)" : "scale(1)",
+                        transition: "all 0.3s ease",
+                      }}
+                      onMouseEnter={() => handleHover("device", index)}
+                      onMouseLeave={() => handleHover("device", null)}
                     />
                   ))}
                 </Pie>
@@ -234,16 +235,18 @@ function AnalyticsDashboard() {
                   outerRadius={80}
                   label
                   isAnimationActive
-                  onMouseEnter={(_, i) => setActiveIndex(i)}
-                  onMouseLeave={() => setActiveIndex(null)}
                 >
                   {countryChartData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={index}
                       fill={COLORS[index % COLORS.length]}
-                      stroke={index === activeIndex ? "#fff" : "none"}
-                      strokeWidth={index === activeIndex ? 2 : 0}
-                      style={{ transition: "all 0.3s ease" }}
+                      style={{
+                        filter: hoveredIndex.country === index ? "drop-shadow(0 0 6px white)" : "none",
+                        transform: hoveredIndex.country === index ? "scale(1.05)" : "scale(1)",
+                        transition: "all 0.3s ease",
+                      }}
+                      onMouseEnter={() => handleHover("country", index)}
+                      onMouseLeave={() => handleHover("country", null)}
                     />
                   ))}
                 </Pie>
