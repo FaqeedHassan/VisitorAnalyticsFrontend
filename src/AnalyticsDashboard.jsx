@@ -20,6 +20,7 @@ const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#14b8a6", "#3b82f6"
 
 function AnalyticsDashboard() {
   const [data, setData] = useState([]);
+  const [activeIndex, setActiveIndex] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const today = new Date();
@@ -68,7 +69,6 @@ function AnalyticsDashboard() {
     document.body.removeChild(link);
   };
 
-  // Normalize and group stats
   const normalize = (str) => (str || "Unknown").trim().toLowerCase();
 
   const browserStats = data.reduce((acc, cur) => {
@@ -111,6 +111,20 @@ function AnalyticsDashboard() {
     count: timeStats[hour] || 0,
   }));
 
+  const customTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-800 text-white p-2 rounded shadow text-sm">
+          <p className="font-semibold">{label}</p>
+          {payload.map((entry, i) => (
+            <p key={i}>{`${entry.name || entry.dataKey}: ${entry.value}`}</p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="p-4 md:p-8 text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-center">📊 Analytics Dashboard</h1>
@@ -143,54 +157,73 @@ function AnalyticsDashboard() {
         </button>
       </div>
 
-      {/* Charts */}
       {loading ? (
         <p className="text-center text-lg text-gray-300">Loading charts...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Browser Chart */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
             <h2 className="text-xl font-semibold mb-4 text-center">🌐 Browser Usage</h2>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={browserChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="name" stroke="#fff" />
                 <YAxis stroke="#fff" />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                <Tooltip content={customTooltip} />
                 <Legend />
-                <Bar dataKey="count" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                <Bar
+                  dataKey="count"
+                  fill="#6366f1"
+                  radius={[6, 6, 0, 0]}
+                  animationDuration={500}
+                  onMouseOver={(e) => setActiveIndex(e.index)}
+                  onMouseOut={() => setActiveIndex(null)}
+                >
+                  {browserChartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={index === activeIndex ? "#818cf8" : "#6366f1"}
+                      style={{ transition: "all 0.3s ease" }}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Device Chart */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
-            <h2 className="text-xl font-semibold mb-4 text-center">💻 Device Distribution</h2>
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
+            <h2 className="text-xl font-semibold mb-4 text-center">💻 Device Breakdown</h2>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={deviceChartData}
                   dataKey="value"
                   nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
                   outerRadius={80}
                   label
                   isAnimationActive
+                  onMouseEnter={(_, i) => setActiveIndex(i)}
+                  onMouseLeave={() => setActiveIndex(null)}
                 >
                   {deviceChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      stroke={index === activeIndex ? "#fff" : "none"}
+                      strokeWidth={index === activeIndex ? 2 : 0}
+                      style={{ transition: "all 0.3s ease" }}
+                    />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                <Tooltip content={customTooltip} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
           {/* Country Chart */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
             <h2 className="text-xl font-semibold mb-4 text-center">🌍 Visitor Countries</h2>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
@@ -198,38 +231,46 @@ function AnalyticsDashboard() {
                   data={countryChartData}
                   dataKey="value"
                   nameKey="name"
-                  cx="50%"
-                  cy="50%"
                   outerRadius={80}
                   label
                   isAnimationActive
+                  onMouseEnter={(_, i) => setActiveIndex(i)}
+                  onMouseLeave={() => setActiveIndex(null)}
                 >
                   {countryChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      stroke={index === activeIndex ? "#fff" : "none"}
+                      strokeWidth={index === activeIndex ? 2 : 0}
+                      style={{ transition: "all 0.3s ease" }}
+                    />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                <Tooltip content={customTooltip} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Time Traffic */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
-            <h2 className="text-xl font-semibold mb-4 text-center">⏱ Hourly Traffic</h2>
+          {/* Time Chart */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
+            <h2 className="text-xl font-semibold mb-4 text-center">⏱ Time-based Traffic</h2>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={timeChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="hour" stroke="#fff" />
                 <YAxis stroke="#fff" />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                <Tooltip content={customTooltip} />
+                <Legend />
                 <Line
                   type="monotone"
                   dataKey="count"
                   stroke="#22c55e"
-                  strokeWidth={2}
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
                   isAnimationActive
-                  animationDuration={700}
                 />
               </LineChart>
             </ResponsiveContainer>
