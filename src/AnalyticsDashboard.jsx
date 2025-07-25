@@ -148,7 +148,7 @@ function AnalyticsDashboard() {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full p-2 rounded-lg text-black"
+            className="w-full p-2 rounded-lg text-white"
           />
         </div>
         <div className="flex-1">
@@ -157,7 +157,7 @@ function AnalyticsDashboard() {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full p-2 rounded-lg text-black"
+            className="w-full p-2 rounded-lg text-white"
           />
         </div>
        <button
