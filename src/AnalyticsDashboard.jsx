@@ -15,7 +15,7 @@ import {
   Legend,
 } from "recharts";
 
-// Vibrant Colors
+// Rich vibrant colors
 const COLORS = [
   "#6366f1", "#ec4899", "#10b981", "#f59e0b", "#ef4444",
   "#0ea5e9", "#8b5cf6", "#22c55e", "#a855f7", "#f43f5e"
@@ -73,7 +73,6 @@ function AnalyticsDashboard() {
     document.body.removeChild(link);
   };
 
-  // Chart Data Preparation
   const browserStats = data.reduce((acc, cur) => {
     const name = cur.browser?.charAt(0).toUpperCase() + cur.browser?.slice(1) || "Unknown";
     acc[name] = (acc[name] || 0) + 1;
@@ -150,11 +149,10 @@ function AnalyticsDashboard() {
               >
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
+                <Tooltip contentStyle={{ backgroundColor: "#000", color: "#fff" }} />
                 <Bar
                   dataKey="count"
                   fill="#6366f1"
-                  animationDuration={500}
                   onMouseOver={(_, index) => setActiveBarIndex(index)}
                 >
                   {browserChartData.map((_, index) => (
@@ -162,10 +160,10 @@ function AnalyticsDashboard() {
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
+                        transform: activeBarIndex === index ? "scale(1.07)" : "scale(1)",
                         filter: activeBarIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
-                        transform: activeBarIndex === index ? "scale(1.05)" : "scale(1)",
                         transition: "all 0.3s ease",
-                        transformOrigin: "bottom",
+                        transformOrigin: "bottom center",
                       }}
                     />
                   ))}
@@ -203,12 +201,12 @@ function AnalyticsDashboard() {
                     />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
+                <Tooltip contentStyle={{ backgroundColor: "#000", color: "#fff" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Visitor Countries with Legend */}
+          {/* Visitor Countries */}
           <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-semibold mb-4">🌍 Visitor Countries</h2>
             <ResponsiveContainer width="100%" height={300}>
@@ -231,14 +229,14 @@ function AnalyticsDashboard() {
                       style={{
                         transform: activeCountryIndex === index ? "scale(1.08)" : "scale(1)",
                         filter: activeCountryIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
-                        transition: "all 0.9s ease",
+                        transition: "all 0.3s ease",
                         transformOrigin: "center",
                       }}
                     />
                   ))}
                 </Pie>
                 <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
+                <Tooltip contentStyle={{ backgroundColor: "#000", color: "#fff" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -250,7 +248,7 @@ function AnalyticsDashboard() {
               <LineChart data={timeChartData}>
                 <XAxis dataKey="hour" />
                 <YAxis />
-                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
+                <Tooltip contentStyle={{ backgroundColor: "#000", color: "#fff" }} />
                 <Line
                   type="monotone"
                   dataKey="count"
