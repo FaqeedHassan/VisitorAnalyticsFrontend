@@ -160,12 +160,24 @@ function AnalyticsDashboard() {
             className="w-full p-2 rounded-lg text-black"
           />
         </div>
-        <button
-          onClick={exportCSV}
-          className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg text-white dark:text-white dark:bg-green-600 dark:hover:bg-green-700"
-        >
-          ⬇️ Export CSV
-        </button>
+       <button
+  onClick={exportCSV}
+  className="px-6 py-2 rounded-lg font-semibold shadow-md"
+  style={{
+    backgroundColor: "#16a34a", // Tailwind green-600
+    color: "#fff",
+    border: "none"
+  }}
+  onMouseOver={(e) => {
+    e.target.style.backgroundColor = "#15803d"; // Tailwind green-700
+  }}
+  onMouseOut={(e) => {
+    e.target.style.backgroundColor = "#16a34a"; // Reset to green-600
+  }}
+>
+  ⬇️ Export CSV
+</button>
+
       </div>
 
       {loading ? (

@@ -51,14 +51,26 @@ function App() {
             placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 rounded text-black"
+            className="w-full p-2 rounded text-white"
           />
-          <button
-            onClick={handleLogin}
-            className="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-semibold"
-          >
-            Login
-          </button>
+         <button
+  onClick={handleLogin}
+  className="w-full p-2 rounded font-semibold shadow-md"
+  style={{
+    backgroundColor: "#2563eb", // Tailwind blue-600
+    color: "#fff",
+    border: "none",
+  }}
+  onMouseOver={(e) => {
+    e.target.style.backgroundColor = "#1d4ed8"; // Tailwind blue-700
+  }}
+  onMouseOut={(e) => {
+    e.target.style.backgroundColor = "#2563eb"; // Reset to blue-600
+  }}
+>
+  Login
+</button>
+
         </div>
       ) : (
         <div className="w-full">
