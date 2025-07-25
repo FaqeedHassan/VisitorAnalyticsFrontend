@@ -231,7 +231,7 @@ function AnalyticsDashboard() {
                       style={{
                         transform: activeCountryIndex === index ? "scale(1.08)" : "scale(1)",
                         filter: activeCountryIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
-                        transition: "all 0.3s ease",
+                        transition: "all 0.9s ease",
                         transformOrigin: "center",
                       }}
                     />
