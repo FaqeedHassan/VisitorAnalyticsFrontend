@@ -12,9 +12,11 @@ import {
   Cell,
   LineChart,
   Line,
+  Legend,
+  CartesianGrid,
 } from "recharts";
 
-const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#14b8a6"];
+const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#14b8a6", "#3b82f6"];
 
 function AnalyticsDashboard() {
   const [data, setData] = useState([]);
@@ -28,7 +30,6 @@ function AnalyticsDashboard() {
   const [startDate, setStartDate] = useState(formatDate(sevenDaysAgo));
   const [endDate, setEndDate] = useState(formatDate(today));
 
-  // Fetch data
   useEffect(() => {
     if (!startDate || !endDate) return;
     setLoading(true);
@@ -60,7 +61,6 @@ function AnalyticsDashboard() {
     const csv = rows.map((row) => Object.values(row).join(",")).join("\n");
     const blob = new Blob([header + "\n" + csv], { type: "text/csv" });
     const link = document.createElement("a");
-
     link.href = URL.createObjectURL(blob);
     link.download = "analytics.csv";
     document.body.appendChild(link);
@@ -68,30 +68,38 @@ function AnalyticsDashboard() {
     document.body.removeChild(link);
   };
 
-  // Stats for charts
+  // Normalize and group stats
+  const normalize = (str) => (str || "Unknown").trim().toLowerCase();
+
   const browserStats = data.reduce((acc, cur) => {
-    acc[cur.browser] = (acc[cur.browser] || 0) + 1;
+    const name = normalize(cur.browser);
+    acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  const browserChartData = Object.entries(browserStats).map(
-    ([name, count]) => ({ name, count })
-  );
+  const browserChartData = Object.entries(browserStats).map(([name, count]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    count,
+  }));
 
   const deviceStats = data.reduce((acc, cur) => {
-    acc[cur.device] = (acc[cur.device] || 0) + 1;
+    const name = normalize(cur.device);
+    acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  const deviceChartData = Object.entries(deviceStats).map(
-    ([name, value]) => ({ name, value })
-  );
+  const deviceChartData = Object.entries(deviceStats).map(([name, value]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    value,
+  }));
 
   const countryStats = data.reduce((acc, cur) => {
-    acc[cur.country] = (acc[cur.country] || 0) + 1;
+    const name = normalize(cur.country);
+    acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  const countryChartData = Object.entries(countryStats).map(
-    ([name, value]) => ({ name, value })
-  );
+  const countryChartData = Object.entries(countryStats).map(([name, value]) => ({
+    name: name.toUpperCase(),
+    value,
+  }));
 
   const timeStats = {};
   data.forEach((item) => {
@@ -104,10 +112,10 @@ function AnalyticsDashboard() {
   }));
 
   return (
-    <div className="p-4 md:p-8 text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen ">
+    <div className="p-4 md:p-8 text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-center">📊 Analytics Dashboard</h1>
 
-      {/* Filter & CSV Export */}
+      {/* Filters */}
       <div className="bg-slate-800 p-6 rounded-2xl shadow-md mb-10 flex flex-col md:flex-row md:items-end gap-6">
         <div className="flex-1">
           <label className="block mb-1 text-gray-300">Start Date</label>
@@ -135,75 +143,86 @@ function AnalyticsDashboard() {
         </button>
       </div>
 
+      {/* Charts */}
       {loading ? (
         <p className="text-center text-lg text-gray-300">Loading charts...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* 1. Browser Usage */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">🌐 Browser Usage</h2>
-            <ResponsiveContainer width="100%" height={300}>
+          {/* Browser Chart */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
+            <h2 className="text-xl font-semibold mb-4 text-center">🌐 Browser Usage</h2>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={browserChartData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#6366f1" animationDuration={700} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="name" stroke="#fff" />
+                <YAxis stroke="#fff" />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                <Legend />
+                <Bar dataKey="count" fill="#6366f1" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* 2. Device Breakdown */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">💻 Device Breakdown</h2>
-            <ResponsiveContainer width="100%" height={300}>
+          {/* Device Chart */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
+            <h2 className="text-xl font-semibold mb-4 text-center">💻 Device Distribution</h2>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={deviceChartData}
                   dataKey="value"
                   nameKey="name"
-                  outerRadius={100}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={80}
                   label
                   isAnimationActive
                 >
                   {deviceChartData.map((entry, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* 3. Visitor Countries */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">🌍 Visitor Countries</h2>
-            <ResponsiveContainer width="100%" height={300}>
+          {/* Country Chart */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
+            <h2 className="text-xl font-semibold mb-4 text-center">🌍 Visitor Countries</h2>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={countryChartData}
                   dataKey="value"
                   nameKey="name"
-                  outerRadius={100}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
                   label
                   isAnimationActive
                 >
                   {countryChartData.map((entry, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* 4. Time-based Traffic */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">⏱ Time-based Traffic</h2>
-            <ResponsiveContainer width="100%" height={300}>
+          {/* Time Traffic */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl transition-transform hover:scale-[1.02]">
+            <h2 className="text-xl font-semibold mb-4 text-center">⏱ Hourly Traffic</h2>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={timeChartData}>
-                <XAxis dataKey="hour" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="hour" stroke="#fff" />
+                <YAxis stroke="#fff" />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
                 <Line
                   type="monotone"
                   dataKey="count"
