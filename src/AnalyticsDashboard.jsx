@@ -12,16 +12,21 @@ import {
   Cell,
   LineChart,
   Line,
+  Legend,
 } from "recharts";
 
-// 🌈 Vibrant color palette
-const COLORS = ["#6366f1", "#ec4899", "#10b981", "#f59e0b", "#ef4444", "#0ea5e9", "#8b5cf6", "#22c55e"];
+// Vibrant Colors
+const COLORS = [
+  "#6366f1", "#ec4899", "#10b981", "#f59e0b", "#ef4444",
+  "#0ea5e9", "#8b5cf6", "#22c55e", "#a855f7", "#f43f5e"
+];
 
 function AnalyticsDashboard() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeDeviceIndex, setActiveDeviceIndex] = useState(null);
   const [activeCountryIndex, setActiveCountryIndex] = useState(null);
+  const [activeBarIndex, setActiveBarIndex] = useState(null);
 
   const today = new Date();
   const sevenDaysAgo = new Date();
@@ -32,9 +37,7 @@ function AnalyticsDashboard() {
   const [endDate, setEndDate] = useState(formatDate(today));
 
   useEffect(() => {
-    if (!startDate || !endDate) return;
     setLoading(true);
-
     axios
       .get(`https://visitoranalyticsbackend-production.up.railway.app/api/data?start=${startDate}&end=${endDate}`)
       .then((res) => {
@@ -70,6 +73,7 @@ function AnalyticsDashboard() {
     document.body.removeChild(link);
   };
 
+  // Chart Data Preparation
   const browserStats = data.reduce((acc, cur) => {
     const name = cur.browser?.charAt(0).toUpperCase() + cur.browser?.slice(1) || "Unknown";
     acc[name] = (acc[name] || 0) + 1;
@@ -137,20 +141,41 @@ function AnalyticsDashboard() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Browser Usage */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-semibold mb-4">🌐 Browser Usage</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={browserChartData}>
+              <BarChart
+                data={browserChartData}
+                onMouseLeave={() => setActiveBarIndex(null)}
+              >
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
-                <Bar dataKey="count" fill="#6366f1" animationDuration={700} />
+                <Bar
+                  dataKey="count"
+                  fill="#6366f1"
+                  animationDuration={500}
+                  onMouseOver={(_, index) => setActiveBarIndex(index)}
+                >
+                  {browserChartData.map((_, index) => (
+                    <Cell
+                      key={index}
+                      fill={COLORS[index % COLORS.length]}
+                      style={{
+                        filter: activeBarIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
+                        transform: activeBarIndex === index ? "scale(1.05)" : "scale(1)",
+                        transition: "all 0.3s ease",
+                        transformOrigin: "bottom",
+                      }}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Device Breakdown */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-semibold mb-4">💻 Device Breakdown</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -165,13 +190,13 @@ function AnalyticsDashboard() {
                   animationDuration={300}
                   label
                 >
-                  {deviceChartData.map((entry, index) => (
+                  {deviceChartData.map((_, index) => (
                     <Cell
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        filter: activeDeviceIndex === index ? `drop-shadow(0 0 8px ${COLORS[index % COLORS.length]})` : "none",
-                        transform: activeDeviceIndex === index ? "scale(1.05)" : "scale(1)",
+                        transform: activeDeviceIndex === index ? "scale(1.08)" : "scale(1)",
+                        filter: activeDeviceIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
                         transition: "all 0.3s ease",
                         transformOrigin: "center",
                       }}
@@ -183,8 +208,8 @@ function AnalyticsDashboard() {
             </ResponsiveContainer>
           </div>
 
-          {/* Visitor Countries */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+          {/* Visitor Countries with Legend */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-semibold mb-4">🌍 Visitor Countries</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -199,26 +224,27 @@ function AnalyticsDashboard() {
                   animationDuration={300}
                   label
                 >
-                  {countryChartData.map((entry, index) => (
+                  {countryChartData.map((_, index) => (
                     <Cell
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        filter: activeCountryIndex === index ? `drop-shadow(0 0 8px ${COLORS[index % COLORS.length]})` : "none",
-                        transform: activeCountryIndex === index ? "scale(1.05)" : "scale(1)",
+                        transform: activeCountryIndex === index ? "scale(1.08)" : "scale(1)",
+                        filter: activeCountryIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
                         transition: "all 0.3s ease",
                         transformOrigin: "center",
                       }}
                     />
                   ))}
                 </Pie>
+                <Legend layout="horizontal" verticalAlign="bottom" align="center" />
                 <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
           {/* Time-based Traffic */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-semibold mb-4">⏱ Time-based Traffic</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={timeChartData}>
