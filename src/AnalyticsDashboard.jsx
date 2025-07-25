@@ -12,27 +12,16 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend,
-  CartesianGrid,
 } from "recharts";
 
-const COLORS = [
-  "#ff6b6b",
-  "#6bcB77",
-  "#4d96ff",
-  "#fbbf24",
-  "#8e44ad",
-  "#00cec9",
-  "#e84393",
-  "#fd7e14",
-  "#1abc9c",
-  "#ff4757"
-];
+// 🌈 Vibrant color palette
+const COLORS = ["#6366f1", "#ec4899", "#10b981", "#f59e0b", "#ef4444", "#0ea5e9", "#8b5cf6", "#22c55e"];
 
 function AnalyticsDashboard() {
   const [data, setData] = useState([]);
-  const [hoveredIndex, setHoveredIndex] = useState({});
   const [loading, setLoading] = useState(false);
+  const [activeDeviceIndex, setActiveDeviceIndex] = useState(null);
+  const [activeCountryIndex, setActiveCountryIndex] = useState(null);
 
   const today = new Date();
   const sevenDaysAgo = new Date();
@@ -73,6 +62,7 @@ function AnalyticsDashboard() {
     const csv = rows.map((row) => Object.values(row).join(",")).join("\n");
     const blob = new Blob([header + "\n" + csv], { type: "text/csv" });
     const link = document.createElement("a");
+
     link.href = URL.createObjectURL(blob);
     link.download = "analytics.csv";
     document.body.appendChild(link);
@@ -80,23 +70,26 @@ function AnalyticsDashboard() {
     document.body.removeChild(link);
   };
 
-  const normalize = (str) => (str || "Unknown").trim().toLowerCase();
+  const browserStats = data.reduce((acc, cur) => {
+    const name = cur.browser?.charAt(0).toUpperCase() + cur.browser?.slice(1) || "Unknown";
+    acc[name] = (acc[name] || 0) + 1;
+    return acc;
+  }, {});
+  const browserChartData = Object.entries(browserStats).map(([name, count]) => ({ name, count }));
 
-  const aggregateData = (key) => {
-    const stats = data.reduce((acc, cur) => {
-      const name = normalize(cur[key]);
-      acc[name] = (acc[name] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(stats).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-    }));
-  };
+  const deviceStats = data.reduce((acc, cur) => {
+    const name = cur.device?.charAt(0).toUpperCase() + cur.device?.slice(1) || "Unknown";
+    acc[name] = (acc[name] || 0) + 1;
+    return acc;
+  }, {});
+  const deviceChartData = Object.entries(deviceStats).map(([name, value]) => ({ name, value }));
 
-  const browserChartData = aggregateData("browser").map((d) => ({ name: d.name, count: d.value }));
-  const deviceChartData = aggregateData("device");
-  const countryChartData = aggregateData("country").map((d) => ({ name: d.name.toUpperCase(), value: d.value }));
+  const countryStats = data.reduce((acc, cur) => {
+    const name = cur.country?.toUpperCase() || "Unknown";
+    acc[name] = (acc[name] || 0) + 1;
+    return acc;
+  }, {});
+  const countryChartData = Object.entries(countryStats).map(([name, value]) => ({ name, value }));
 
   const timeStats = {};
   data.forEach((item) => {
@@ -107,24 +100,6 @@ function AnalyticsDashboard() {
     hour,
     count: timeStats[hour] || 0,
   }));
-
-  const customTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-gray-800 text-white p-2 rounded shadow text-sm">
-          <p className="font-semibold">{label}</p>
-          {payload.map((entry, i) => (
-            <p key={i}>{`${entry.name || entry.dataKey}: ${entry.value}`}</p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const handleHover = (chart, index) => {
-    setHoveredIndex((prev) => ({ ...prev, [chart]: index }));
-  };
 
   return (
     <div className="p-4 md:p-8 text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen">
@@ -161,119 +136,102 @@ function AnalyticsDashboard() {
         <p className="text-center text-lg text-gray-300">Loading charts...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* Browser Chart */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-semibold mb-4 text-center">🌐 Browser Usage</h2>
-            <ResponsiveContainer width="100%" height={250}>
+          {/* Browser Usage */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+            <h2 className="text-2xl font-semibold mb-4">🌐 Browser Usage</h2>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={browserChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" stroke="#fff" />
-                <YAxis stroke="#fff" />
-                <Tooltip content={customTooltip} />
-                <Legend />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                  {browserChartData.map((entry, index) => (
-                    <Cell
-                      key={index}
-                      fill={COLORS[index % COLORS.length]}
-                      style={{
-                        filter: hoveredIndex.browser === index ? "drop-shadow(0 0 6px white)" : "none",
-                        transform: hoveredIndex.browser === index ? "translateY(-4px)" : "translateY(0)",
-                        transition: "all 0.3s ease",
-                      }}
-                      onMouseEnter={() => handleHover("browser", index)}
-                      onMouseLeave={() => handleHover("browser", null)}
-                    />
-                  ))}
-                </Bar>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
+                <Bar dataKey="count" fill="#6366f1" animationDuration={700} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Device Chart */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-semibold mb-4 text-center">💻 Device Breakdown</h2>
-            <ResponsiveContainer width="100%" height={250}>
+          {/* Device Breakdown */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+            <h2 className="text-2xl font-semibold mb-4">💻 Device Breakdown</h2>
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={deviceChartData}
                   dataKey="value"
                   nameKey="name"
-                  outerRadius={80}
+                  outerRadius={100}
+                  activeIndex={activeDeviceIndex}
+                  onMouseEnter={(_, index) => setActiveDeviceIndex(index)}
+                  onMouseLeave={() => setActiveDeviceIndex(null)}
+                  animationDuration={300}
                   label
-                  isAnimationActive
                 >
                   {deviceChartData.map((entry, index) => (
                     <Cell
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        filter: hoveredIndex.device === index ? "drop-shadow(0 0 6px white)" : "none",
-                        transform: hoveredIndex.device === index ? "scale(1.05)" : "scale(1)",
+                        filter: activeDeviceIndex === index ? `drop-shadow(0 0 8px ${COLORS[index % COLORS.length]})` : "none",
+                        transform: activeDeviceIndex === index ? "scale(1.05)" : "scale(1)",
                         transition: "all 0.3s ease",
+                        transformOrigin: "center",
                       }}
-                      onMouseEnter={() => handleHover("device", index)}
-                      onMouseLeave={() => handleHover("device", null)}
                     />
                   ))}
                 </Pie>
-                <Tooltip content={customTooltip} />
-                <Legend />
+                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Country Chart */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-semibold mb-4 text-center">🌍 Visitor Countries</h2>
-            <ResponsiveContainer width="100%" height={250}>
+          {/* Visitor Countries */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+            <h2 className="text-2xl font-semibold mb-4">🌍 Visitor Countries</h2>
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={countryChartData}
                   dataKey="value"
                   nameKey="name"
-                  outerRadius={80}
+                  outerRadius={100}
+                  activeIndex={activeCountryIndex}
+                  onMouseEnter={(_, index) => setActiveCountryIndex(index)}
+                  onMouseLeave={() => setActiveCountryIndex(null)}
+                  animationDuration={300}
                   label
-                  isAnimationActive
                 >
                   {countryChartData.map((entry, index) => (
                     <Cell
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        filter: hoveredIndex.country === index ? "drop-shadow(0 0 6px white)" : "none",
-                        transform: hoveredIndex.country === index ? "scale(1.05)" : "scale(1)",
+                        filter: activeCountryIndex === index ? `drop-shadow(0 0 8px ${COLORS[index % COLORS.length]})` : "none",
+                        transform: activeCountryIndex === index ? "scale(1.05)" : "scale(1)",
                         transition: "all 0.3s ease",
+                        transformOrigin: "center",
                       }}
-                      onMouseEnter={() => handleHover("country", index)}
-                      onMouseLeave={() => handleHover("country", null)}
                     />
                   ))}
                 </Pie>
-                <Tooltip content={customTooltip} />
-                <Legend />
+                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Time Chart */}
-          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl">
-            <h2 className="text-xl font-semibold mb-4 text-center">⏱ Time-based Traffic</h2>
-            <ResponsiveContainer width="100%" height={250}>
+          {/* Time-based Traffic */}
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-md transition hover:shadow-xl">
+            <h2 className="text-2xl font-semibold mb-4">⏱ Time-based Traffic</h2>
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={timeChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="hour" stroke="#fff" />
-                <YAxis stroke="#fff" />
-                <Tooltip content={customTooltip} />
-                <Legend />
+                <XAxis dataKey="hour" />
+                <YAxis />
+                <Tooltip contentStyle={{ backgroundColor: "#1e293b", color: "#fff" }} />
                 <Line
                   type="monotone"
                   dataKey="count"
                   stroke="#22c55e"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
+                  strokeWidth={2}
                   isAnimationActive
+                  animationDuration={700}
                 />
               </LineChart>
             </ResponsiveContainer>
