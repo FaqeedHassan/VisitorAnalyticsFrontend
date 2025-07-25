@@ -15,27 +15,32 @@ import {
   Legend,
 } from "recharts";
 
-// 🎨 Vibrant colors
 const COLORS = [
   "#6366f1", "#ec4899", "#10b981", "#f59e0b", "#ef4444",
   "#0ea5e9", "#8b5cf6", "#22c55e", "#a855f7", "#f43f5e"
 ];
 
-const tooltipStyle = {
-  backgroundColor: "#000",
-  border: "none",
-  borderRadius: "10px",
+const customTooltipStyle = {
+  backgroundColor: "#1e293b",
   color: "#fff",
+  borderRadius: "8px",
+  boxShadow: "0 0 10px rgba(0,0,0,0.3)",
+  fontSize: "14px",
   padding: "10px",
+};
+
+const tooltipProps = {
+  contentStyle: customTooltipStyle,
+  labelStyle: { color: "#fff" },
+  itemStyle: { color: "#fff" },
 };
 
 function AnalyticsDashboard() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const [activeBarIndex, setActiveBarIndex] = useState(null);
   const [activeDeviceIndex, setActiveDeviceIndex] = useState(null);
   const [activeCountryIndex, setActiveCountryIndex] = useState(null);
+  const [activeBarIndex, setActiveBarIndex] = useState(null);
 
   const today = new Date();
   const sevenDaysAgo = new Date();
@@ -61,7 +66,6 @@ function AnalyticsDashboard() {
 
   const exportCSV = () => {
     if (data.length === 0) return;
-
     const rows = data.map((row) => ({
       ip: row.ip,
       browser: row.browser,
@@ -69,12 +73,10 @@ function AnalyticsDashboard() {
       country: row.country,
       timestamp: new Date(row.timestamp).toLocaleString(),
     }));
-
     const header = Object.keys(rows[0]).join(",");
     const csv = rows.map((row) => Object.values(row).join(",")).join("\n");
     const blob = new Blob([header + "\n" + csv], { type: "text/csv" });
     const link = document.createElement("a");
-
     link.href = URL.createObjectURL(blob);
     link.download = "analytics.csv";
     document.body.appendChild(link);
@@ -117,6 +119,7 @@ function AnalyticsDashboard() {
     <div className="p-4 md:p-8 text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-center">📊 Analytics Dashboard</h1>
 
+      {/* Filters */}
       <div className="bg-slate-800 p-6 rounded-2xl shadow-md mb-10 flex flex-col md:flex-row md:items-end gap-6">
         <div className="flex-1">
           <label className="block mb-1 text-gray-300">Start Date</label>
@@ -152,12 +155,16 @@ function AnalyticsDashboard() {
           <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-semibold mb-4">🌐 Browser Usage</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={browserChartData} onMouseLeave={() => setActiveBarIndex(null)}>
+              <BarChart
+                data={browserChartData}
+                onMouseLeave={() => setActiveBarIndex(null)}
+              >
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip {...tooltipProps} />
                 <Bar
                   dataKey="count"
+                  fill="#6366f1"
                   onMouseOver={(_, index) => setActiveBarIndex(index)}
                 >
                   {browserChartData.map((_, index) => (
@@ -166,11 +173,9 @@ function AnalyticsDashboard() {
                       fill={COLORS[index % COLORS.length]}
                       style={{
                         transform: activeBarIndex === index ? "scale(1.05)" : "scale(1)",
-                        filter: activeBarIndex === index
-                          ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})`
-                          : "none",
                         transition: "all 0.3s ease",
-                        transformOrigin: "bottom center",
+                        transformOrigin: "bottom",
+                        filter: activeBarIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
                       }}
                     />
                   ))}
@@ -192,6 +197,7 @@ function AnalyticsDashboard() {
                   activeIndex={activeDeviceIndex}
                   onMouseEnter={(_, index) => setActiveDeviceIndex(index)}
                   onMouseLeave={() => setActiveDeviceIndex(null)}
+                  animationDuration={300}
                   label
                 >
                   {deviceChartData.map((_, index) => (
@@ -199,17 +205,15 @@ function AnalyticsDashboard() {
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        transform: activeDeviceIndex === index ? "scale(1.07)" : "scale(1)",
-                        filter: activeDeviceIndex === index
-                          ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})`
-                          : "none",
+                        transform: activeDeviceIndex === index ? "scale(1.08)" : "scale(1)",
+                        filter: activeDeviceIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
                         transition: "all 0.3s ease",
                         transformOrigin: "center",
                       }}
                     />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip {...tooltipProps} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -227,6 +231,7 @@ function AnalyticsDashboard() {
                   activeIndex={activeCountryIndex}
                   onMouseEnter={(_, index) => setActiveCountryIndex(index)}
                   onMouseLeave={() => setActiveCountryIndex(null)}
+                  animationDuration={300}
                   label
                 >
                   {countryChartData.map((_, index) => (
@@ -234,10 +239,8 @@ function AnalyticsDashboard() {
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        transform: activeCountryIndex === index ? "scale(1.07)" : "scale(1)",
-                        filter: activeCountryIndex === index
-                          ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})`
-                          : "none",
+                        transform: activeCountryIndex === index ? "scale(1.08)" : "scale(1)",
+                        filter: activeCountryIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
                         transition: "all 0.3s ease",
                         transformOrigin: "center",
                       }}
@@ -245,7 +248,7 @@ function AnalyticsDashboard() {
                   ))}
                 </Pie>
                 <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip {...tooltipProps} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -257,23 +260,14 @@ function AnalyticsDashboard() {
               <LineChart data={timeChartData}>
                 <XAxis dataKey="hour" />
                 <YAxis />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip {...tooltipProps} />
                 <Line
                   type="monotone"
                   dataKey="count"
                   stroke="#22c55e"
                   strokeWidth={2}
-                  dot={{
-                    stroke: "#22c55e",
-                    strokeWidth: 2,
-                    r: 4,
-                  }}
-                  activeDot={{
-                    r: 6,
-                    fill: "#fff",
-                    stroke: "#22c55e",
-                    strokeWidth: 2,
-                  }}
+                  isAnimationActive
+                  animationDuration={700}
                 />
               </LineChart>
             </ResponsiveContainer>
