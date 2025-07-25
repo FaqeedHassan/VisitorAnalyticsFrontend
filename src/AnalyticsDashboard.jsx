@@ -16,8 +16,16 @@ import {
 } from "recharts";
 
 const COLORS = [
-  "#6366f1", "#ec4899", "#10b981", "#f59e0b", "#ef4444",
-  "#0ea5e9", "#8b5cf6", "#22c55e", "#a855f7", "#f43f5e"
+  "#6366f1",
+  "#ec4899",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#0ea5e9",
+  "#8b5cf6",
+  "#22c55e",
+  "#a855f7",
+  "#f43f5e",
 ];
 
 const customTooltipStyle = {
@@ -53,7 +61,9 @@ function AnalyticsDashboard() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`https://visitoranalyticsbackend-production.up.railway.app/api/data?start=${startDate}&end=${endDate}`)
+      .get(
+        `https://visitoranalyticsbackend-production.up.railway.app/api/data?start=${startDate}&end=${endDate}`
+      )
       .then((res) => {
         setData(res.data);
         setLoading(false);
@@ -85,25 +95,34 @@ function AnalyticsDashboard() {
   };
 
   const browserStats = data.reduce((acc, cur) => {
-    const name = cur.browser?.charAt(0).toUpperCase() + cur.browser?.slice(1) || "Unknown";
+    const name =
+      cur.browser?.charAt(0).toUpperCase() + cur.browser?.slice(1) || "Unknown";
     acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  const browserChartData = Object.entries(browserStats).map(([name, count]) => ({ name, count }));
+  const browserChartData = Object.entries(browserStats).map(
+    ([name, count]) => ({ name, count })
+  );
 
   const deviceStats = data.reduce((acc, cur) => {
-    const name = cur.device?.charAt(0).toUpperCase() + cur.device?.slice(1) || "Unknown";
+    const name =
+      cur.device?.charAt(0).toUpperCase() + cur.device?.slice(1) || "Unknown";
     acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  const deviceChartData = Object.entries(deviceStats).map(([name, value]) => ({ name, value }));
+  const deviceChartData = Object.entries(deviceStats).map(([name, value]) => ({
+    name,
+    value,
+  }));
 
   const countryStats = data.reduce((acc, cur) => {
     const name = cur.country?.toUpperCase() || "Unknown";
     acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  const countryChartData = Object.entries(countryStats).map(([name, value]) => ({ name, value }));
+  const countryChartData = Object.entries(countryStats).map(
+    ([name, value]) => ({ name, value })
+  );
 
   const timeStats = {};
   data.forEach((item) => {
@@ -117,7 +136,9 @@ function AnalyticsDashboard() {
 
   return (
     <div className="p-4 md:p-8 text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-center">📊 Analytics Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        📊 Analytics Dashboard
+      </h1>
 
       {/* Filters */}
       <div className="bg-slate-800 p-6 rounded-2xl shadow-md mb-10 flex flex-col md:flex-row md:items-end gap-6">
@@ -141,7 +162,7 @@ function AnalyticsDashboard() {
         </div>
         <button
           onClick={exportCSV}
-          className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg text-white"
+          className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg text-white dark:text-white dark:bg-green-600 dark:hover:bg-green-700"
         >
           ⬇️ Export CSV
         </button>
@@ -172,10 +193,16 @@ function AnalyticsDashboard() {
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        transform: activeBarIndex === index ? "scale(1.05)" : "scale(1)",
+                        transform:
+                          activeBarIndex === index ? "scale(1.05)" : "scale(1)",
                         transition: "all 0.3s ease",
                         transformOrigin: "bottom",
-                        filter: activeBarIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
+                        filter:
+                          activeBarIndex === index
+                            ? `drop-shadow(0 0 10px ${
+                                COLORS[index % COLORS.length]
+                              })`
+                            : "none",
                       }}
                     />
                   ))}
@@ -205,8 +232,16 @@ function AnalyticsDashboard() {
                       key={index}
                       fill={COLORS[index % COLORS.length]}
                       style={{
-                        transform: activeDeviceIndex === index ? "scale(1.08)" : "scale(1)",
-                        filter: activeDeviceIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
+                        transform:
+                          activeDeviceIndex === index
+                            ? "scale(1.08)"
+                            : "scale(1)",
+                        filter:
+                          activeDeviceIndex === index
+                            ? `drop-shadow(0 0 10px ${
+                                COLORS[index % COLORS.length]
+                              })`
+                            : "none",
                         transition: "all 0.3s ease",
                         transformOrigin: "center",
                       }}
@@ -220,42 +255,79 @@ function AnalyticsDashboard() {
 
           {/* Visitor Countries */}
           <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">🌍 Visitor Countries</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={countryChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={100}
-                  activeIndex={activeCountryIndex}
-                  onMouseEnter={(_, index) => setActiveCountryIndex(index)}
-                  onMouseLeave={() => setActiveCountryIndex(null)}
-                  animationDuration={300}
-                  label
-                >
-                  {countryChartData.map((_, index) => (
-                    <Cell
+            <h2 className="text-2xl font-semibold mb-4">
+              🌍 Visitor Countries
+            </h2>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-around">
+              <ResponsiveContainer
+                width="100%"
+                height={300}
+                className="md:w-2/3"
+              >
+                <PieChart>
+                  <Pie
+                    data={countryChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={100}
+                    activeIndex={activeCountryIndex}
+                    onMouseEnter={(_, index) => setActiveCountryIndex(index)}
+                    onMouseLeave={() => setActiveCountryIndex(null)}
+                    animationDuration={300}
+                    label
+                  >
+                    {countryChartData.map((_, index) => (
+                      <Cell
+                        key={index}
+                        fill={COLORS[index % COLORS.length]}
+                        style={{
+                          transform:
+                            activeCountryIndex === index
+                              ? "scale(1.08)"
+                              : "scale(1)",
+                          filter:
+                            activeCountryIndex === index
+                              ? `drop-shadow(0 0 10px ${
+                                  COLORS[index % COLORS.length]
+                                })`
+                              : "none",
+                          transition: "all 0.3s ease",
+                          transformOrigin: "center",
+                        }}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip {...tooltipProps} />
+                </PieChart>
+              </ResponsiveContainer>
+
+              {/* Responsive legend */}
+              <div className="mt-4 md:mt-0 md:w-1/3">
+                <ul className="flex flex-wrap gap-2 justify-center md:justify-start">
+                  {countryChartData.map((entry, index) => (
+                    <li
                       key={index}
-                      fill={COLORS[index % COLORS.length]}
-                      style={{
-                        transform: activeCountryIndex === index ? "scale(1.08)" : "scale(1)",
-                        filter: activeCountryIndex === index ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` : "none",
-                        transition: "all 0.3s ease",
-                        transformOrigin: "center",
-                      }}
-                    />
+                      className="flex items-center gap-2 text-sm text-white"
+                    >
+                      <span
+                        className="inline-block w-3 h-3 rounded-full"
+                        style={{
+                          backgroundColor: COLORS[index % COLORS.length],
+                        }}
+                      ></span>
+                      {entry.name}
+                    </li>
                   ))}
-                </Pie>
-                <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-                <Tooltip {...tooltipProps} />
-              </PieChart>
-            </ResponsiveContainer>
+                </ul>
+              </div>
+            </div>
           </div>
 
           {/* Time-based Traffic */}
           <div className="bg-slate-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">⏱ Time-based Traffic</h2>
+            <h2 className="text-2xl font-semibold mb-4">
+              ⏱ Time-based Traffic
+            </h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={timeChartData}>
                 <XAxis dataKey="hour" />
